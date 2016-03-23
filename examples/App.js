@@ -22,7 +22,7 @@ var _reactTransformHmr3 = require('react-transform-hmr');
 
 var _reactTransformHmr4 = _interopRequireDefault(_reactTransformHmr3);
 
-var _index = require('../build/index');
+var _index = require('../index');
 
 var _index2 = _interopRequireDefault(_index);
 
@@ -63,6 +63,7 @@ function _wrapComponent(id) {
     return _reactTransformHmr2(_reactTransformCatchErrors2(Component, id), id);
   };
 }
+// var IdleTimer = require('../index');
 
 var App = _wrapComponent('App')(function (_Component) {
   _inherits(App, _Component);

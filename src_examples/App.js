@@ -1,6 +1,7 @@
-import React, { Component, PropTypes } from 'react'
-import IdleTimer from '../build/index'
-import bindAll from 'lodash.bindall'
+import React, { Component, PropTypes } from 'react';
+import IdleTimer from '../index';
+// var IdleTimer = require('../index');
+import bindAll from 'lodash.bindall';
 
 export default class App extends Component {
 

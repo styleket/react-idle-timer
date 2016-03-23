@@ -2,10 +2,11 @@
   "name": "react-idle-timer",
   "version": "1.2.11",
   "description": "Activity detection for React.js",
-  "main": "build/index.js",
+  "main": "index.js",
   "files": [
     "build",
-    "examples"
+    "examples",
+    "src"
   ],
   "scripts": {
     "clean": "rimraf build && rimraf examples/App.js && rimraf examples/init.js && rimraf examples/server.js",
