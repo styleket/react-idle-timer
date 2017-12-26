@@ -11,7 +11,7 @@ var webpack = require('webpack');
 
 function getJsxLoader() {
   return  { test: /\.jsx?$/
-          , loader: 'babel'
+          , loader: 'babel-loader'
           , exclude: /node_modules/
           , include: [path.join(__dirname, 'examples'), path.join(__dirname, 'src')]
           }
@@ -23,7 +23,7 @@ module.exports = {
     cache: true,
     entry: [ 'webpack-hot-middleware/client', './examples/init' ],
     resolve: {
-        extensions: ['', '.jsx', '.js']
+        extensions: ['.jsx', '.js']
     },
     output: {
         path: path.join(__dirname, 'examples'),
@@ -31,9 +31,9 @@ module.exports = {
         publicPath: '/'
     },
     plugins: [
-        new webpack.optimize.OccurenceOrderPlugin(true),
+      // new webpack.optimize.OccurenceOrderPlugin(true),
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NoErrorsPlugin()
+        new webpack.NoEmitOnErrorsPlugin(),
     ],
     module: {
         loaders: [ getJsxLoader() ]

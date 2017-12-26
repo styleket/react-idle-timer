@@ -6,17 +6,11 @@
  *
  */
 
-import React, { Component, PropTypes } from 'react';
-import moment from 'moment';
-import bindAll from 'lodash.bindall';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import format from 'date-fns/format'
 
 export default class IdleTimer extends Component {
-
-  constructor(props) {
-    super(props);
-    bindAll(this, ['_toggleIdleState', '_handleEvent', 'reset', 'pause', 'resume', 'getRemainingTime', 'getElapsedTime', 'getLastActiveTime', 'isIdle'])
-  }
-
   static propTypes = {
     timeout: PropTypes.number, // Activity timeout
     events: PropTypes.arrayOf(PropTypes.string), // Activity events to bind
@@ -32,7 +26,7 @@ export default class IdleTimer extends Component {
     events: ['mousemove', 'keydown', 'wheel', 'DOMMouseScroll', 'mouseWheel', 'mousedown', 'touchstart', 'touchmove', 'MSPointerDown', 'MSPointerMove'],
     idleAction: () => {},
     activeAction: () => {},
-    element: typeof window === 'object' ? document : {},
+    element: (typeof window === 'undefined' ? 'undefined' : typeof (window)) === 'object' ? document : {},
     startOnLoad: true
   };
 
@@ -41,10 +35,11 @@ export default class IdleTimer extends Component {
     oldDate: +new Date(),
     lastActive: +new Date(),
     remaining: null,
-    tId: null,
     pageX: null,
     pageY: null
   };
+
+  tId = null;
 
   componentWillMount() {
     if (typeof window !== 'object') return;
@@ -52,13 +47,15 @@ export default class IdleTimer extends Component {
   }
 
   componentDidMount() {
-    if (this.props.startOnLoad) this.reset();
+    if (this.props.startOnLoad) {
+      this.reset();
+    }
   }
 
   componentWillUnmount() {
     if (typeof window !== 'object') return;
     // Clear timeout to prevent delayed state changes
-    clearTimeout(this.state.tId);
+    clearTimeout(this.tId);
     // Unbind all events
     this.props.events.forEach(e => this.props.element.removeEventListener(e, this._handleEvent));
   }
@@ -98,7 +95,7 @@ export default class IdleTimer extends Component {
    * @return {void}
    *
    */
-  _handleEvent(e) {
+  _handleEvent = (e) => {
 
     // Already idle, ignore events
     if (this.state.remaining) return
@@ -112,26 +109,26 @@ export default class IdleTimer extends Component {
       if (typeof e.pageX === 'undefined' && typeof e.pageY === 'undefined')
         return
         // under 200 ms is hard to do, and you would have to stop, as continuous activity will bypass this
-      let elapsed = (+new Date()) - this.state.oldDate
+      let elapsed = this.getElapsedTime();
       if (elapsed < 200)
         return
     }
 
     // clear any existing timeout
-    clearTimeout(this.state.tId)
+    clearTimeout(this.tId)
 
     // if the idle timer is enabled, flip
-    if (this.state.idle)
+    if (this.state.idle) {
       this._toggleIdleState(e)
+    }
 
     this.setState({
-      lastActive: +new Date() // store when user was last active
-        ,
-      pageX: e.pageX // update mouse coord
-        ,
-      pageY: e.pageY,
-      tId: setTimeout(this._toggleIdleState, this.props.timeout) // set a new timeout
+      lastActive: +new Date(), // store when user was last active
+      pageX: e.pageX, // update mouse coord
+      pageY: e.pageY
     });
+
+    this.tId = setTimeout(this._toggleIdleState.bind(this), this.props.timeout) // set a new timeout
 
   }
 
@@ -148,16 +145,18 @@ export default class IdleTimer extends Component {
 
   reset() {
     // reset timers
-    clearTimeout(this.state.tId);
+    clearTimeout(this.tId);
 
     // reset settings
     this.setState({
       idle: false,
       oldDate: +new Date(),
       lastActive: this.state.oldDate,
-      remaining: null,
-      tId: setTimeout(this._toggleIdleState, this.props.timeout)
-    })
+      remaining: null
+    });
+
+    // Set timeout
+    this.tId = setTimeout(this._toggleIdleState.bind(this), this.props.timeout)
   }
 
   /**
@@ -169,15 +168,18 @@ export default class IdleTimer extends Component {
    */
   pause() {
     // this is already paused
-    if (this.state.remaining !== null)
+    if (this.state.remaining !== null) {
       return
+    }
+
+    console.log('pausing');
 
     // clear any existing timeout
-    clearTimeout(this.state.tId)
+    clearTimeout(this.tId)
 
     // define how much is left on the timer
     this.setState({
-      remaining: this.props.timeout - ((+new Date()) - this.state.oldDate)
+      remaining: this.getRemainingTime()
     })
   }
 
@@ -189,14 +191,17 @@ export default class IdleTimer extends Component {
    */
   resume() {
     // this isn't paused yet
-    if (this.state.remaining === null) return;
+    if (this.state.remaining === null) {
+      return;
+    }
 
     // start timer and clear remaining
     if (!this.state.idle) {
       this.setState({
-        tId: setTimeout(this._toggleIdleState, this.state.remaining),
         remaining: null
-      })
+      });
+      // Set a new timeout
+      this.tId = setTimeout(this._toggleIdleState.bind(this), this.state.remaining)
     }
   }
 
@@ -208,17 +213,20 @@ export default class IdleTimer extends Component {
    */
   getRemainingTime() {
     // If idle there is no time remaining
-    if (this.state.idle)
+    if (this.state.idle) {
       return 0
+    }
 
     // If its paused just return that
-    if (this.state.remaining != null)
+    if (this.state.remaining !== null) {
       return this.state.remaining
+    }
 
     // Determine remaining, if negative idle didn't finish flipping, just return 0
     let remaining = this.props.timeout - ((+new Date()) - this.state.lastActive)
-    if (remaining < 0)
+    if (remaining < 0) {
       remaining = 0
+    }
 
     // If this is paused return that number, else return current remaining
     return remaining
@@ -241,7 +249,9 @@ export default class IdleTimer extends Component {
    *
    */
   getLastActiveTime() {
-    if (this.props.format) return moment(this.state.lastActive).format(this.props.format)
+    if (this.props.format) {
+      return format(this.state.lastActive, this.props.format)
+    }
     return this.state.lastActive
   }
 
